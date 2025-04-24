@@ -24,7 +24,9 @@ app = FastAPI(title="Unified Agent Creation API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=[
+        "http://localhost:3000",
+    ],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,12 +44,10 @@ class CreateAgentRequest(BaseModel):
     agent_name: Optional[str] = None
     voice: str  
     prompt: Optional[str] = None
-    language: Optional[str] = "en"  # Standardized language (e.g., "en", "es")
+    language: Optional[str] = "en"  
     voicemail_message: Optional[str] = None
-    retell_llm_config: Optional[Dict] = None  # Optional Retell LLM config
+    retell_llm_config: Optional[Dict] = None  
 
-
-# Response model for standardized output
 class CreateAgentResponse(BaseModel):
     agent_id: str
     agent_name: Optional[str]
@@ -105,7 +105,6 @@ async def create_retell_llm(
 
     logger.info(f"Creating Retell LLM with payload: {payload}")
 
-    # Try synchronous request with requests library
     logger.info("Attempting synchronous request for Retell LLM...")
     try:
         response = requests.post(
@@ -124,7 +123,6 @@ async def create_retell_llm(
     except requests.RequestException as e:
         logger.error(f"Retell LLM synchronous error: {str(e)}")
 
-    # Fall back to async httpx with retries
     logger.info("Falling back to async httpx for Retell LLM...")
     async with httpx.AsyncClient(timeout=30.0) as client:
         for attempt in range(3):
@@ -176,7 +174,6 @@ async def call_retell_api(payload: dict) -> dict:
     )
     logger.info(f"Retell request payload: {payload}")
 
-    # Try synchronous request with requests library
     logger.info("Attempting synchronous request with requests library...")
     try:
         response = requests.post(
@@ -192,7 +189,6 @@ async def call_retell_api(payload: dict) -> dict:
     except requests.RequestException as e:
         logger.error(f"Synchronous requests error: {str(e)}")
 
-    # Fall back to async httpx
     logger.info("Falling back to async httpx request...")
     async with httpx.AsyncClient(timeout=30.0) as client:
         for attempt in range(3):
@@ -279,7 +275,6 @@ async def map_to_retell_params(request: CreateAgentRequest) -> dict:
             detail=f"Unsupported voice: {request.voice}. Supported voices: {list(VOICE_MAPPING.keys())}",
         )
 
-    # Create a new Retell LLM if prompt or retell_llm_config is provided
     llm_id = "llm_587545622cc03980ff4c957e794a"  # Default llm_id
     if request.prompt or request.retell_llm_config:
         try:
